@@ -5,6 +5,7 @@ import { formatFileSize, formatDate } from '../utils/formatters';
 import { FilePreview } from './FilePreview';
 import { Model3DThumbnail } from './Model3DThumbnail';
 import { useModelLoader } from '../hooks/useModelLoader';
+import { FontPreview } from './FontPreview';
 
 interface FileGridProps {
   items: FileItem[];
@@ -12,6 +13,7 @@ interface FileGridProps {
   getThumbnailUrl: (path: string, size?: number) => string;
   getFolderPreviewUrl: (path: string, size?: number) => string;
   getFileUrl: (path: string) => string;
+  currentPath: string;
 }
 
 export const FileGrid: React.FC<FileGridProps> = ({ 
@@ -19,10 +21,33 @@ export const FileGrid: React.FC<FileGridProps> = ({
   onNavigate, 
   getThumbnailUrl,
   getFolderPreviewUrl,
-  getFileUrl 
+  getFileUrl,
+  currentPath
 }) => {
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const { clearAllLoads } = useModelLoader();
+
+  // Open preview if preview param is present in URL on mount or when items change
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const previewName = urlParams.get('preview');
+    if (previewName && items.length > 0) {
+      const file = items.find(item => !item.isDirectory && item.name === previewName);
+      if (file) setSelectedFile(file);
+    }
+  }, [items]);
+
+  // Update URL when preview is opened/closed
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (selectedFile) {
+      url.searchParams.set('preview', selectedFile.name);
+      window.history.pushState({}, '', url);
+    } else {
+      url.searchParams.delete('preview');
+      window.history.pushState({}, '', url);
+    }
+  }, [selectedFile]);
 
   // Clear all model loads when navigating to a new directory
   useEffect(() => {
@@ -52,6 +77,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
       case 'audio': return 'border-green-500/30 bg-green-500/5';
       case 'video': return 'border-red-500/30 bg-red-500/5';
       case 'documents': return 'border-yellow-500/30 bg-yellow-500/5';
+      case 'fonts': return 'border-orange-500/30 bg-orange-500/5';
       default: return 'border-gray-500/30 bg-gray-500/5';
     }
   };
@@ -176,6 +202,21 @@ export const FileGrid: React.FC<FileGridProps> = ({
       );
     }
     
+    // Font files - show font preview
+    if (!item.isDirectory && item.fileType === 'fonts') {
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-600 to-orange-800 rounded-md relative">
+          <div className="text-center">
+            <div className="text-white/90 text-2xl font-bold mb-2">Aa</div>
+            <div className="text-white/70 text-xs">Font</div>
+          </div>
+          <div className="absolute bottom-2 right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">
+            Font
+          </div>
+        </div>
+      );
+    }
+    
     // Audio files - show waveform-style preview
     if (!item.isDirectory && item.fileType === 'audio') {
       return (
@@ -272,55 +313,105 @@ export const FileGrid: React.FC<FileGridProps> = ({
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
         {items.map((item, index) => (
-          <div
-            key={item.path}
-            onClick={() => handleItemClick(item)}
-            className={`
-              group cursor-pointer rounded-xl border-2 transition-all duration-300
-              hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/20
-              ${getFileTypeColor(item.fileType, item.isDirectory, item.hasAssets)}
-              backdrop-blur-sm
-            `}
-          >
-            <div className="p-4">
-              {/* Enhanced Thumbnail with Priority Loading */}
-              <div className="aspect-square mb-3 rounded-lg overflow-hidden bg-gray-800/50 flex items-center justify-center relative shadow-lg">
-                {renderThumbnail(item, index)}
-              </div>
-              
-              {/* File Info */}
-              <div className="space-y-2">
-                <h3 className="font-medium text-white truncate group-hover:text-indigo-300 transition-colors text-sm" title={item.name}>
-                  {item.name}
-                </h3>
-                <div className="text-xs text-gray-400 space-y-1">
-                  {!item.isDirectory && (
-                    <p className="font-mono">{formatFileSize(item.size)}</p>
-                  )}
-                  {item.isDirectory && item.hasAssets && item.firstAsset && (
-                    <p className="text-emerald-400 capitalize font-medium">
-                      {item.firstAsset.type} assets
-                    </p>
-                  )}
-                  <p className="opacity-75">{formatDate(item.modified)}</p>
+          item.isDirectory ? (
+            <a
+              key={item.path}
+              href={`?path=${encodeURIComponent(item.path)}`}
+              onClick={e => {
+                if (!(e.ctrlKey || e.metaKey || e.button === 1)) {
+                  e.preventDefault();
+                  handleItemClick(item);
+                }
+              }}
+              className={
+                `group cursor-pointer rounded-xl border-2 transition-all duration-300
+                hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/20
+                ${getFileTypeColor(item.fileType, item.isDirectory, item.hasAssets)}
+                backdrop-blur-sm`
+              }
+            >
+              <div className="p-4">
+                {/* Enhanced Thumbnail with Priority Loading */}
+                <div className="aspect-square mb-3 rounded-lg overflow-hidden bg-gray-800/50 flex items-center justify-center relative shadow-lg">
+                  {renderThumbnail(item, index)}
+                </div>
+                {/* File Info */}
+                <div className="space-y-2">
+                  <h3 className="font-medium text-white truncate group-hover:text-indigo-300 transition-colors text-sm" title={item.name}>
+                    {item.name}
+                  </h3>
+                  <div className="text-xs text-gray-400 space-y-1">
+                    {item.hasAssets && item.firstAsset && (
+                      <p className="text-emerald-400 capitalize font-medium">
+                        {item.firstAsset.type} assets
+                      </p>
+                    )}
+                    <p className="opacity-75">{formatDate(item.modified)}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </a>
+          ) : (
+            <a
+              key={item.path}
+              href={`?path=${encodeURIComponent(currentPath)}&preview=${encodeURIComponent(item.name)}`}
+              onClick={e => {
+                if (!(e.ctrlKey || e.metaKey || e.button === 1)) {
+                  e.preventDefault();
+                  handleItemClick(item);
+                }
+              }}
+              className={
+                `group cursor-pointer rounded-xl border-2 transition-all duration-300
+                hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/20
+                ${getFileTypeColor(item.fileType, item.isDirectory, item.hasAssets)}
+                backdrop-blur-sm`
+              }
+            >
+              <div className="p-4">
+                {/* Enhanced Thumbnail with Priority Loading */}
+                <div className="aspect-square mb-3 rounded-lg overflow-hidden bg-gray-800/50 flex items-center justify-center relative shadow-lg">
+                  {renderThumbnail(item, index)}
+                </div>
+                {/* File Info */}
+                <div className="space-y-2">
+                  <h3 className="font-medium text-white truncate group-hover:text-indigo-300 transition-colors text-sm" title={item.name}>
+                    {item.name}
+                  </h3>
+                  <div className="text-xs text-gray-400 space-y-1">
+                    <p className="font-mono">{formatFileSize(item.size)}</p>
+                    <p className="opacity-75">{formatDate(item.modified)}</p>
+                  </div>
+                </div>
+              </div>
+            </a>
+          )
         ))}
       </div>
 
       {selectedFile && (
-        <FilePreview
-          file={selectedFile}
-          onClose={() => setSelectedFile(null)}
-          getFileUrl={getFileUrl}
-          getThumbnailUrl={getThumbnailUrl}
-          onNavigate={navigateToFile}
-          canNavigate={files.length > 1}
-          currentIndex={currentFileIndex + 1}
-          totalFiles={files.length}
-        />
+        selectedFile.fileType === 'fonts' ? (
+          <FontPreview
+            file={selectedFile}
+            onClose={() => setSelectedFile(null)}
+            getFileUrl={getFileUrl}
+            onNavigate={navigateToFile}
+            canNavigate={files.length > 1}
+            currentIndex={currentFileIndex + 1}
+            totalFiles={files.length}
+          />
+        ) : (
+          <FilePreview
+            file={selectedFile}
+            onClose={() => setSelectedFile(null)}
+            getFileUrl={getFileUrl}
+            getThumbnailUrl={getThumbnailUrl}
+            onNavigate={navigateToFile}
+            canNavigate={files.length > 1}
+            currentIndex={currentFileIndex + 1}
+            totalFiles={files.length}
+          />
+        )
       )}
     </>
   );

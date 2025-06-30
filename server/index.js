@@ -26,7 +26,8 @@ const SUPPORTED_EXTENSIONS = {
   models: ['.glb', '.gltf', '.fbx', '.obj', '.dae', '.3ds'],
   audio: ['.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac'],
   video: ['.mp4', '.webm', '.mov', '.avi', '.mkv'],
-  documents: ['.txt', '.json', '.xml', '.md', '.url']
+  documents: ['.txt', '.json', '.xml', '.md', '.url'],
+  fonts: ['.ttf', '.otf', '.woff', '.woff2', '.eot', '.fnt', '.fon']
 };
 
 const getFileType = (filePath) => {

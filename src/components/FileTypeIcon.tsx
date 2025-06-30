@@ -7,7 +7,8 @@ import {
   FileText, 
   Folder, 
   FolderOpen,
-  File
+  File,
+  Type
 } from 'lucide-react';
 
 interface FileTypeIconProps {
@@ -40,6 +41,8 @@ export const FileTypeIcon: React.FC<FileTypeIconProps> = ({
       return <Video className={`${className} text-red-400`} />;
     case 'documents':
       return <FileText className={`${className} text-yellow-400`} />;
+    case 'fonts':
+      return <Type className={`${className} text-orange-400`} />;
     default:
       return <File className={`${className} text-gray-400`} />;
   }

@@ -20,6 +20,21 @@ function App() {
 
   const [hasInitialized, setHasInitialized] = useState(false);
 
+  // Wrap browseDirectory to update the URL
+  const browseDirectoryAndUpdateUrl = (path) => {
+    browseDirectory(path);
+    if (path) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('path', path);
+      window.history.pushState({}, '', url);
+    } else {
+      // Remove ?path if no path
+      const url = new URL(window.location.href);
+      url.searchParams.delete('path');
+      window.history.pushState({}, '', url.pathname);
+    }
+  };
+
   useEffect(() => {
     if (hasInitialized) return;
 
@@ -61,7 +76,7 @@ function App() {
               <h1 className="text-2xl font-bold text-white">Total Asset Browser</h1>
               <p className="text-gray-400 text-sm">Browse and preview your game assets from anywhere on your system</p>
             </div>
-            <PathInput currentPath={currentPath} onNavigate={browseDirectory} />
+            <PathInput currentPath={currentPath} onNavigate={browseDirectoryAndUpdateUrl} />
           </div>
         </div>
       </header>
@@ -69,7 +84,7 @@ function App() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Quick Access Favorites */}
-        <FavoritePaths onNavigate={browseDirectory} />
+        <FavoritePaths onNavigate={browseDirectoryAndUpdateUrl} />
 
         {/* Welcome Screen */}
         {showWelcomeScreen && (
@@ -84,7 +99,7 @@ function App() {
 
         {/* Breadcrumb */}
         {currentPath && (
-          <Breadcrumb currentPath={currentPath} onNavigate={browseDirectory} />
+          <Breadcrumb currentPath={currentPath} onNavigate={browseDirectoryAndUpdateUrl} />
         )}
 
         {/* Loading State */}
@@ -117,10 +132,11 @@ function App() {
 
             <FileGrid
               items={items}
-              onNavigate={browseDirectory}
+              onNavigate={browseDirectoryAndUpdateUrl}
               getThumbnailUrl={getThumbnailUrl}
               getFolderPreviewUrl={getFolderPreviewUrl}
               getFileUrl={getFileUrl}
+              currentPath={currentPath}
             />
           </>
         )}

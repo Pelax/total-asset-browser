@@ -33,7 +33,8 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
   const [imageZoom, setImageZoom] = useState(1);
   const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const dragStartRef = useRef({ x: 0, y: 0 });
+  const dragStartImagePositionRef = useRef({ x: 0, y: 0 });
   const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [textContent, setTextContent] = useState<string>('');
@@ -501,7 +502,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
       const scaledWidth = scaledHeight * imageAspect;
       return {
         width: scaledWidth,
-        height: scaledWidth,
+        height: scaledHeight,
         shouldScale: true
       };
     }
@@ -574,17 +575,16 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
       e.preventDefault();
       e.stopPropagation();
       setIsDragging(true);
-      setDragStart({
-        x: e.clientX - imagePosition.x,
-        y: e.clientY - imagePosition.y
-      });
+      // Store the mouse position and image position at drag start in refs
+      dragStartRef.current = { x: e.clientX, y: e.clientY };
+      dragStartImagePositionRef.current = { ...imagePosition };
       
       // Add global mouse event listeners for better performance
       const handleGlobalMouseMove = (e: MouseEvent) => {
         e.preventDefault();
         setImagePosition({
-          x: e.clientX - dragStart.x,
-          y: e.clientY - dragStart.y
+          x: dragStartImagePositionRef.current.x + (e.clientX - dragStartRef.current.x),
+          y: dragStartImagePositionRef.current.y + (e.clientY - dragStartRef.current.y)
         });
       };
 
@@ -598,7 +598,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
       document.addEventListener('mousemove', handleGlobalMouseMove);
       document.addEventListener('mouseup', handleGlobalMouseUp);
     }
-  }, [imageZoom, imagePosition.x, imagePosition.y, dragStart.x, dragStart.y]);
+  }, [imageZoom, imagePosition]);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     if (file.fileType === 'images') {
@@ -635,6 +635,12 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
       default:
         return 'language-text';
     }
+  };
+
+  // Get the current folder path from file.path
+  const getCurrentFolderPath = () => {
+    const lastSep = file.path.lastIndexOf('/') !== -1 ? file.path.lastIndexOf('/') : file.path.lastIndexOf('\\');
+    return lastSep !== -1 ? file.path.slice(0, lastSep) : '';
   };
 
   const renderPreview = () => {
@@ -831,13 +837,6 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                         <p className="text-sm text-gray-400 mb-1">Target URL:</p>
                         <p className="text-white font-mono text-sm break-all">{url}</p>
                       </div>
-                      <button
-                        onClick={() => window.open(url, '_blank')}
-                        className="ml-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors text-sm flex items-center space-x-2"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        <span>Open</span>
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -888,7 +887,9 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
       {/* Navigation Arrows */}
       {canNavigate && onNavigate && (
         <>
@@ -909,7 +910,9 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
         </>
       )}
 
-      <div className="bg-gray-800 rounded-xl w-full max-w-7xl mx-auto flex flex-col" style={{ maxHeight: 'calc(100vh - 2rem)' }}>
+      <div className="bg-gray-800 rounded-xl w-full max-w-7xl mx-auto flex flex-col" style={{ maxHeight: 'calc(100vh - 2rem)' }}
+        onClick={e => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700 flex-shrink-0">
           <div className="flex items-center space-x-3">
@@ -935,20 +938,14 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             >
               <FolderOpen className="w-5 h-5" />
             </button>
-            <button
-              onClick={() => window.open(getFileUrl(file.path), '_blank')}
+            <a
+              href={`?path=${encodeURIComponent(getCurrentFolderPath())}&preview=${encodeURIComponent(file.name)}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
               title="Open in new tab"
             >
               <ExternalLink className="w-5 h-5" />
-            </button>
-            <a
-              href={getFileUrl(file.path)}
-              download={file.name}
-              className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-              title="Download"
-            >
-              <Download className="w-5 h-5" />
             </a>
             <button
               onClick={onClose}

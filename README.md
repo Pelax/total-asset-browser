@@ -27,6 +27,6 @@ The application will start on `http://localhost:5173` with the API server on `ht
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Acknowledgments
-- Built using [Bolt.new](https://bolt.new)
+- I know very little about web development so this was created and expanded using several chat bots (bolt, claude, minimax, deepseek, etc)
 - Uses Three.js for 3D model rendering
 - Built with React, TypeScript, and Tailwind CSS

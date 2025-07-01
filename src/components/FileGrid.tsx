@@ -16,9 +16,9 @@ interface FileGridProps {
   currentPath: string;
 }
 
-export const FileGrid: React.FC<FileGridProps> = ({ 
-  items, 
-  onNavigate, 
+export const FileGrid: React.FC<FileGridProps> = ({
+  items,
+  onNavigate,
   getThumbnailUrl,
   getFolderPreviewUrl,
   getFileUrl,
@@ -68,9 +68,9 @@ export const FileGrid: React.FC<FileGridProps> = ({
 
   const getFileTypeColor = (fileType: string, isDirectory: boolean, hasAssets?: boolean) => {
     if (isDirectory) {
-      return hasAssets ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-gray-500/30 bg-gray-500/5';
+      return hasAssets ? 'border-gray-500/30 bg-emerald-500/5' : 'border-gray-500/30 bg-gray-500/5';
     }
-    
+
     switch (fileType) {
       case 'images': return 'border-blue-500/30 bg-blue-500/5';
       case 'models': return 'border-purple-500/30 bg-purple-500/5';
@@ -88,44 +88,43 @@ export const FileGrid: React.FC<FileGridProps> = ({
 
   const navigateToFile = (direction: 'prev' | 'next') => {
     if (currentFileIndex === -1) return;
-    
+
     let newIndex;
     if (direction === 'prev') {
       newIndex = currentFileIndex > 0 ? currentFileIndex - 1 : files.length - 1;
     } else {
       newIndex = currentFileIndex < files.length - 1 ? currentFileIndex + 1 : 0;
     }
-    
+
     setSelectedFile(files[newIndex]);
   };
 
   // Enhanced thumbnail rendering with 3D model support and priority loading
   const renderThumbnail = (item: FileItem, index: number) => {
     const thumbnailSize = 200;
-    
+
     // Calculate priority based on position (earlier items get higher priority)
     const priority = Math.max(100 - index, 0);
-    
+
     // Folder with assets preview - FIXED FOR 3D MODELS!
     if (item.isDirectory && item.hasAssets && item.firstAsset) {
       // If the first asset is a 3D model, render it as 3D!
       if (item.firstAsset.type === 'models') {
         return (
           <div className="w-full h-full relative">
-            <Model3DThumbnail 
+            <Model3DThumbnail
               modelPath={item.firstAsset.path}
               getFileUrl={getFileUrl}
               className="w-full h-full rounded-md"
               priority={priority + 50} // Folder previews get higher priority
             />
-            {/* 3D Models indicator */}
-            <div className="absolute bottom-2 right-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg z-10">
-              3D Models
+            <div className="absolute bottom-2 right-2 bg-gray-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">
+              Folder
             </div>
           </div>
         );
       }
-      
+
       // For other asset types, use the server-generated preview
       return (
         <>
@@ -142,21 +141,20 @@ export const FileGrid: React.FC<FileGridProps> = ({
             }}
           />
           <div className="hidden flex items-center justify-center">
-            <FileTypeIcon 
-              fileType={item.fileType} 
+            <FileTypeIcon
+              fileType={item.fileType}
               isDirectory={item.isDirectory}
               hasAssets={item.hasAssets}
-              className="w-12 h-12" 
+              className="w-12 h-12"
             />
           </div>
-          {/* Asset type indicator */}
-          <div className="absolute bottom-2 right-2 bg-emerald-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">
-            {item.firstAsset.type.charAt(0).toUpperCase() + item.firstAsset.type.slice(1)}
+          <div className="absolute bottom-2 right-2 bg-gray-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">
+            Folder
           </div>
         </>
       );
     }
-    
+
     // Images - show actual image preview
     if (!item.isDirectory && item.fileType === 'images') {
       return (
@@ -173,35 +171,38 @@ export const FileGrid: React.FC<FileGridProps> = ({
               if (fallback) fallback.classList.remove('hidden');
             }}
           />
+          <div className="absolute bottom-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">
+            Image
+          </div>
           <div className="hidden flex items-center justify-center">
-            <FileTypeIcon 
-              fileType={item.fileType} 
+            <FileTypeIcon
+              fileType={item.fileType}
               isDirectory={item.isDirectory}
-              className="w-12 h-12" 
+              className="w-12 h-12"
             />
           </div>
         </>
       );
     }
-    
+
     // 3D Models - RENDER ACTUAL 3D MODEL with priority loading
     if (!item.isDirectory && item.fileType === 'models') {
       return (
         <div className="w-full h-full relative">
-          <Model3DThumbnail 
+          <Model3DThumbnail
             modelPath={item.path}
             getFileUrl={getFileUrl}
             className="w-full h-full rounded-md"
             priority={priority}
           />
           {/* 3D Model indicator */}
-          <div className="absolute top-2 right-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg z-10">
+          <div className="absolute bottom-2 right-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg z-10">
             3D
           </div>
         </div>
       );
     }
-    
+
     // Font files - show font preview
     if (!item.isDirectory && item.fileType === 'fonts') {
       return (
@@ -216,7 +217,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
         </div>
       );
     }
-    
+
     // Audio files - show waveform-style preview
     if (!item.isDirectory && item.fileType === 'audio') {
       return (
@@ -240,7 +241,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
         </div>
       );
     }
-    
+
     // Video files - show film strip preview
     if (!item.isDirectory && item.fileType === 'video') {
       return (
@@ -265,7 +266,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
         </div>
       );
     }
-    
+
     // Documents - show document preview
     if (!item.isDirectory && item.fileType === 'documents') {
       return (
@@ -284,15 +285,15 @@ export const FileGrid: React.FC<FileGridProps> = ({
         </div>
       );
     }
-    
+
     // Default icon for other file types
     return (
       <div className="w-full h-full flex items-center justify-center">
-        <FileTypeIcon 
-          fileType={item.fileType} 
+        <FileTypeIcon
+          fileType={item.fileType}
           isDirectory={item.isDirectory}
           hasAssets={item.hasAssets}
-          className="w-12 h-12" 
+          className="w-12 h-12"
         />
       </div>
     );
@@ -340,14 +341,6 @@ export const FileGrid: React.FC<FileGridProps> = ({
                   <h3 className="font-medium text-white truncate group-hover:text-indigo-300 transition-colors text-sm" title={item.name}>
                     {item.name}
                   </h3>
-                  <div className="text-xs text-gray-400 space-y-1">
-                    {item.hasAssets && item.firstAsset && (
-                      <p className="text-emerald-400 capitalize font-medium">
-                        {item.firstAsset.type} assets
-                      </p>
-                    )}
-                    <p className="opacity-75">{formatDate(item.modified)}</p>
-                  </div>
                 </div>
               </div>
             </a>

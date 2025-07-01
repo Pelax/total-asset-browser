@@ -21,7 +21,8 @@ function App() {
   const [hasInitialized, setHasInitialized] = useState(false);
 
   // Wrap browseDirectory to update the URL
-  const browseDirectoryAndUpdateUrl = (path) => {
+  const browseDirectoryAndUpdateUrl = (path: string) => {
+
     browseDirectory(path);
     if (path) {
       const url = new URL(window.location.href);

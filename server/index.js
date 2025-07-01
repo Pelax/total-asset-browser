@@ -44,11 +44,11 @@ const findColormap = (modelPath) => {
     const modelDir = path.dirname(modelPath);
     const modelName = path.basename(modelPath, path.extname(modelPath));
     const modelExt = path.extname(modelPath).toLowerCase();
-    
+
     console.log(`\n=== 🔍 ENHANCED TEXTURE SEARCH for ${modelExt.toUpperCase()} model: ${modelPath} ===`);
     console.log(`Model directory: ${modelDir}`);
     console.log(`Model name: ${modelName}`);
-    
+
     // ENHANCED search locations with more comprehensive patterns
     const searchLocations = [
       // Same directory as model
@@ -72,7 +72,7 @@ const findColormap = (modelPath) => {
       path.join(path.dirname(modelDir), 'Textures'),
       path.join(path.dirname(modelDir), 'Materials'),
     ];
-    
+
     // ENHANCED texture names with FBX/OBJ specific patterns
     const textureNames = [
       // Model-specific names (highest priority)
@@ -81,7 +81,7 @@ const findColormap = (modelPath) => {
       `${modelName}.jpeg`,
       `${modelName}.tga`,
       `${modelName}.bmp`,
-      
+
       // FBX/OBJ common patterns
       `${modelName}_diffuse.png`,
       `${modelName}_diffuse.jpg`,
@@ -101,7 +101,7 @@ const findColormap = (modelPath) => {
       `${modelName}_texture.jpg`,
       `${modelName}_map.png`,
       `${modelName}_map.jpg`,
-      
+
       // Common generic names
       'diffuse.png', 'diffuse.jpg', 'Diffuse.png', 'Diffuse.jpg',
       'albedo.png', 'albedo.jpg', 'Albedo.png', 'Albedo.jpg',
@@ -111,29 +111,29 @@ const findColormap = (modelPath) => {
       'base.png', 'base.jpg', 'Base.png', 'Base.jpg',
       'material.png', 'material.jpg', 'Material.png', 'Material.jpg',
       'map.png', 'map.jpg', 'Map.png', 'Map.jpg',
-      
+
       // TGA format (common in game assets)
       `${modelName}.tga`,
       'diffuse.tga', 'Diffuse.tga',
       'albedo.tga', 'Albedo.tga',
       'color.tga', 'Color.tga',
       'texture.tga', 'Texture.tga',
-      
+
       // BMP format
       `${modelName}.bmp`,
       'diffuse.bmp', 'Diffuse.bmp',
       'texture.bmp', 'Texture.bmp'
     ];
-    
+
     // Search in each location
     for (const location of searchLocations) {
       if (!fs.existsSync(location)) {
         console.log(`❌ Location does not exist: ${location}`);
         continue;
       }
-      
+
       console.log(`🔍 Searching in: ${location}`);
-      
+
       // First, try specific texture names
       for (const textureName of textureNames) {
         const texturePath = path.join(location, textureName);
@@ -142,12 +142,12 @@ const findColormap = (modelPath) => {
           return texturePath;
         }
       }
-      
+
       // If no specific names found, look for any image file with intelligent scoring
       try {
         const files = fs.readdirSync(location);
         console.log(`📁 Files in ${location}:`, files.slice(0, 15)); // Log first 15 files
-        
+
         // Look for image files with intelligent scoring
         const imageFiles = files.filter(file => {
           const ext = path.extname(file).toLowerCase();
@@ -158,13 +158,13 @@ const findColormap = (modelPath) => {
           const fileName = file.toLowerCase();
           const fileNameNoExt = path.basename(file, path.extname(file)).toLowerCase();
           const modelNameLower = modelName.toLowerCase();
-          
+
           // Exact model name match (highest score)
           if (fileNameNoExt === modelNameLower) score += 100;
-          
+
           // Model name contained in filename
           if (fileName.includes(modelNameLower)) score += 50;
-          
+
           // Common texture keywords
           if (fileName.includes('diffuse')) score += 30;
           if (fileName.includes('albedo')) score += 25;
@@ -173,12 +173,12 @@ const findColormap = (modelPath) => {
           if (fileName.includes('material')) score += 10;
           if (fileName.includes('map')) score += 8;
           if (fileName.includes('base')) score += 5;
-          
+
           // Prefer PNG and JPG over other formats
           const ext = path.extname(file).toLowerCase();
           if (ext === '.png') score += 3;
           if (ext === '.jpg' || ext === '.jpeg') score += 2;
-          
+
           // Penalize normal maps, bump maps, etc.
           if (fileName.includes('normal')) score -= 20;
           if (fileName.includes('bump')) score -= 20;
@@ -188,30 +188,30 @@ const findColormap = (modelPath) => {
           if (fileName.includes('spec')) score -= 10;
           if (fileName.includes('ao')) score -= 10;
           if (fileName.includes('occlusion')) score -= 10;
-          
+
           return { file, score };
         }).sort((a, b) => b.score - a.score);
-        
+
         if (imageFiles.length > 0 && imageFiles[0].score > 0) {
           const bestMatch = path.join(location, imageFiles[0].file);
           console.log(`✅ FOUND BEST MATCH: ${bestMatch} (score: ${imageFiles[0].score})`);
           console.log(`🏆 Top candidates:`, imageFiles.slice(0, 3).map(f => `${f.file} (${f.score})`));
           return bestMatch;
         }
-        
+
         // If no good matches, try the first image file as last resort
         if (imageFiles.length > 0) {
           const fallback = path.join(location, imageFiles[0].file);
           console.log(`⚠️ FALLBACK TEXTURE: ${fallback}`);
           return fallback;
         }
-        
+
       } catch (e) {
         console.log(`❌ Error reading directory ${location}:`, e.message);
         continue;
       }
     }
-    
+
     console.log(`❌ NO TEXTURE FOUND for model: ${modelPath}`);
     return null;
   } catch (e) {
@@ -224,10 +224,10 @@ const findColormap = (modelPath) => {
 const generate3DModelThumbnail = async (modelPath, size) => {
   try {
     console.log(`\n=== Generating 3D thumbnail for: ${modelPath} ===`);
-    
+
     // First, try to find and use the colormap texture as thumbnail
     const colormapPath = findColormap(modelPath);
-    
+
     if (colormapPath) {
       console.log(`✓ Using colormap texture as thumbnail: ${colormapPath}`);
       try {
@@ -236,7 +236,7 @@ const generate3DModelThumbnail = async (modelPath, size) => {
           .resize(size, size, { fit: 'contain', background: { r: 42, g: 42, b: 42, alpha: 1 } })
           .jpeg({ quality: 95 })
           .toBuffer();
-        
+
         // Add 3D overlay to indicate it's a model
         const overlayBuffer = await sharp({
           create: {
@@ -246,14 +246,14 @@ const generate3DModelThumbnail = async (modelPath, size) => {
             background: { r: 0, g: 0, b: 0, alpha: 0 }
           }
         })
-        .composite([
-          {
-            input: textureBuffer,
-            top: 0,
-            left: 0
-          },
-          {
-            input: Buffer.from(`
+          .composite([
+            {
+              input: textureBuffer,
+              top: 0,
+              left: 0
+            },
+            {
+              input: Buffer.from(`
               <svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
                 <!-- 3D indicator badge -->
                 <circle cx="${size - 20}" cy="20" r="12" fill="#8b5cf6" opacity="0.9" stroke="white" stroke-width="2"/>
@@ -272,25 +272,25 @@ const generate3DModelThumbnail = async (modelPath, size) => {
                 <rect width="100%" height="100%" fill="url(#depthGrad)" />
               </svg>
             `),
-            top: 0,
-            left: 0
-          }
-        ])
-        .jpeg({ quality: 90 })
-        .toBuffer();
-        
+              top: 0,
+              left: 0
+            }
+          ])
+          .jpeg({ quality: 90 })
+          .toBuffer();
+
         console.log('✓ Successfully generated texture-based 3D thumbnail');
         return overlayBuffer;
-        
+
       } catch (e) {
         console.log('Failed to process colormap texture, falling back to icon');
       }
     }
-    
+
     // If no texture found or texture processing failed, generate enhanced 3D icon
     console.log('Generating enhanced 3D model icon');
     return await generateEnhanced3DIcon(modelPath, size);
-    
+
   } catch (error) {
     console.error('Error generating 3D thumbnail:', error);
     return await generateEnhanced3DIcon(modelPath, size);
@@ -301,16 +301,16 @@ const generate3DModelThumbnail = async (modelPath, size) => {
 const generateEnhanced3DIcon = async (modelPath, size) => {
   const modelTypeColors = {
     '.glb': { primary: '#8b5cf6', secondary: '#a78bfa' },
-    '.gltf': { primary: '#8b5cf6', secondary: '#a78bfa' }, 
+    '.gltf': { primary: '#8b5cf6', secondary: '#a78bfa' },
     '.fbx': { primary: '#06b6d4', secondary: '#67e8f9' },
     '.obj': { primary: '#10b981', secondary: '#6ee7b7' },
     '.dae': { primary: '#f59e0b', secondary: '#fbbf24' },
     '.3ds': { primary: '#ef4444', secondary: '#f87171' }
   };
-  
+
   const ext = path.extname(modelPath).toLowerCase();
   const colors = modelTypeColors[ext] || { primary: '#8b5cf6', secondary: '#a78bfa' };
-  
+
   const canvas = Buffer.from(`
     <svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -346,33 +346,33 @@ const generateEnhanced3DIcon = async (modelPath, size) => {
       <rect width="100%" height="100%" fill="url(#bgGrad)" rx="12"/>
       
       <!-- 3D Cube with enhanced depth and lighting -->
-      <g transform="translate(${size/2}, ${size/2})" filter="url(#shadow)">
+      <g transform="translate(${size / 2}, ${size / 2})" filter="url(#shadow)">
         <!-- Back faces for depth -->
-        <polygon points="-${size/8},-${size/5} ${size/8},-${size/5} ${size/6},-${size/3} -${size/6},-${size/3}" 
+        <polygon points="-${size / 8},-${size / 5} ${size / 8},-${size / 5} ${size / 6},-${size / 3} -${size / 6},-${size / 3}" 
                  fill="${colors.primary}" opacity="0.2" stroke="white" stroke-width="0.5"/>
-        <polygon points="${size/8},-${size/5} ${size/6},-${size/3} ${size/6},${size/6} ${size/8},${size/4}" 
+        <polygon points="${size / 8},-${size / 5} ${size / 6},-${size / 3} ${size / 6},${size / 6} ${size / 8},${size / 4}" 
                  fill="${colors.primary}" opacity="0.2" stroke="white" stroke-width="0.5"/>
         
         <!-- Main cube faces -->
         <!-- Front face -->
-        <polygon points="-${size/6},-${size/8} ${size/6},-${size/8} ${size/6},${size/3} -${size/6},${size/3}" 
+        <polygon points="-${size / 6},-${size / 8} ${size / 6},-${size / 8} ${size / 6},${size / 3} -${size / 6},${size / 3}" 
                  fill="url(#cubeGrad)" stroke="white" stroke-width="2" opacity="0.9" filter="url(#glow)"/>
         <!-- Top face -->
-        <polygon points="-${size/6},-${size/8} -${size/8},-${size/3} ${size/8},-${size/3} ${size/6},-${size/8}" 
+        <polygon points="-${size / 6},-${size / 8} -${size / 8},-${size / 3} ${size / 8},-${size / 3} ${size / 6},-${size / 8}" 
                  fill="url(#topGrad)" stroke="white" stroke-width="2" opacity="0.8"/>
         <!-- Right face -->
-        <polygon points="${size/6},-${size/8} ${size/8},-${size/3} ${size/8},${size/6} ${size/6},${size/3}" 
+        <polygon points="${size / 6},-${size / 8} ${size / 8},-${size / 3} ${size / 8},${size / 6} ${size / 6},${size / 3}" 
                  fill="url(#sideGrad)" stroke="white" stroke-width="2" opacity="0.6"/>
         
         <!-- Highlight lines for extra depth -->
-        <line x1="-${size/6}" y1="-${size/8}" x2="${size/6}" y2="-${size/8}" stroke="white" stroke-width="1" opacity="0.6"/>
-        <line x1="-${size/6}" y1="-${size/8}" x2="-${size/8}" y2="-${size/3}" stroke="white" stroke-width="1" opacity="0.6"/>
-        <line x1="${size/6}" y1="-${size/8}" x2="${size/8}" y2="-${size/3}" stroke="white" stroke-width="1" opacity="0.6"/>
+        <line x1="-${size / 6}" y1="-${size / 8}" x2="${size / 6}" y2="-${size / 8}" stroke="white" stroke-width="1" opacity="0.6"/>
+        <line x1="-${size / 6}" y1="-${size / 8}" x2="-${size / 8}" y2="-${size / 3}" stroke="white" stroke-width="1" opacity="0.6"/>
+        <line x1="${size / 6}" y1="-${size / 8}" x2="${size / 8}" y2="-${size / 3}" stroke="white" stroke-width="1" opacity="0.6"/>
       </g>
       
       <!-- File extension label with better styling -->
       <text x="50%" y="82%" text-anchor="middle" dy="0.3em" 
-            fill="white" font-size="${size/11}" font-family="Arial" font-weight="bold" opacity="0.9"
+            fill="white" font-size="${size / 11}" font-family="Arial" font-weight="bold" opacity="0.9"
             filter="url(#shadow)">
         ${ext.substring(1).toUpperCase()}
       </text>
@@ -389,10 +389,10 @@ const generateEnhanced3DIcon = async (modelPath, size) => {
       
       <!-- Subtle corner highlights -->
       <circle cx="15" cy="15" r="3" fill="white" opacity="0.1"/>
-      <circle cx="${size-15}" cy="${size-15}" r="3" fill="white" opacity="0.1"/>
+      <circle cx="${size - 15}" cy="${size - 15}" r="3" fill="white" opacity="0.1"/>
     </svg>
   `);
-  
+
   return await sharp(canvas)
     .resize(size, size)
     .jpeg({ quality: 90 })
@@ -403,7 +403,7 @@ const generateEnhanced3DIcon = async (modelPath, size) => {
 const findFirstAsset = (dirPath) => {
   try {
     const items = fs.readdirSync(dirPath);
-    
+
     // FIRST PRIORITY: Look for 3D models (they make the best folder previews!)
     for (const item of items) {
       const itemPath = path.join(dirPath, item);
@@ -420,7 +420,7 @@ const findFirstAsset = (dirPath) => {
         continue;
       }
     }
-    
+
     // SECOND PRIORITY: Look for images (good for previews)
     for (const item of items) {
       const itemPath = path.join(dirPath, item);
@@ -436,7 +436,7 @@ const findFirstAsset = (dirPath) => {
         continue;
       }
     }
-    
+
     // If no images or models, look for any other supported asset
     for (const item of items) {
       const itemPath = path.join(dirPath, item);
@@ -452,7 +452,7 @@ const findFirstAsset = (dirPath) => {
         continue;
       }
     }
-    
+
     // Recursively check subdirectories (but only one level deep to avoid performance issues)
     for (const item of items) {
       const itemPath = path.join(dirPath, item);
@@ -468,7 +468,7 @@ const findFirstAsset = (dirPath) => {
         continue;
       }
     }
-    
+
     return null;
   } catch (e) {
     return null;
@@ -479,14 +479,14 @@ const findFirstAsset = (dirPath) => {
 app.get('/api/browse', async (req, res) => {
   try {
     let dirPath = req.query.path;
-    
+
     // If no path provided, start with user's home directory
     if (!dirPath) {
       dirPath = os.homedir();
     }
-    
+
     console.log('Browsing directory:', dirPath);
-    
+
     if (!fs.existsSync(dirPath)) {
       return res.status(404).json({ error: 'Directory not found' });
     }
@@ -504,11 +504,11 @@ app.get('/api/browse', async (req, res) => {
       try {
         const itemStats = fs.statSync(itemPath);
         const isDirectory = itemStats.isDirectory();
-        
+
         let fileType = 'folder';
         let hasAssets = false;
         let firstAsset = null;
-        
+
         if (!isDirectory) {
           fileType = getFileType(itemPath);
         } else {
@@ -519,9 +519,23 @@ app.get('/api/browse', async (req, res) => {
               const fileType = getFileType(path.join(itemPath, file));
               return fileType !== 'unknown';
             });
-            
             if (hasAssets) {
               firstAsset = findFirstAsset(itemPath);
+            } else {
+              // directory without any assets in it, find image in subfolders
+              const subfolders = fs.readdirSync(itemPath);
+              for (const subfolder of subfolders) {
+                const subfolderPath = path.join(itemPath, subfolder);
+                const subfolderStats = fs.statSync(subfolderPath);
+                if (subfolderStats.isDirectory()) {
+                  const subfolderAsset = findFirstAsset(subfolderPath);
+                  if (subfolderAsset) {
+                    firstAsset = subfolderAsset;
+                    hasAssets = true;
+                    break;
+                  }
+                }
+              }
             }
           } catch (e) {
             // Permission denied or other error
@@ -568,7 +582,7 @@ app.get('/api/thumbnail', async (req, res) => {
   try {
     const filePath = req.query.path;
     const size = parseInt(req.query.size) || 200;
-    
+
     if (!filePath || !fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'File not found' });
     }
@@ -576,7 +590,7 @@ app.get('/api/thumbnail', async (req, res) => {
     // Create a more specific cache key that includes file modification time
     const stats = fs.statSync(filePath);
     const cacheKey = `${filePath}-${size}-${stats.mtime.getTime()}`;
-    
+
     if (thumbnailCache.has(cacheKey)) {
       const cachedBuffer = thumbnailCache.get(cacheKey);
       res.set('Content-Type', 'image/jpeg');
@@ -600,25 +614,25 @@ app.get('/api/thumbnail', async (req, res) => {
             .toBuffer();
         }
         break;
-        
+
       case 'models':
         // Generate texture-based 3D model thumbnail
         console.log(`Generating 3D model thumbnail for: ${filePath}`);
         thumbnailBuffer = await generate3DModelThumbnail(filePath, size);
         break;
-        
+
       default:
         // Generate a colored square with file type icon
         const canvas = Buffer.from(`
           <svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
             <rect width="100%" height="100%" fill="#374151"/>
             <text x="50%" y="50%" text-anchor="middle" dy="0.3em" 
-                  fill="white" font-size="${size/8}" font-family="Arial">
+                  fill="white" font-size="${size / 8}" font-family="Arial">
               ${fileType.toUpperCase()}
             </text>
           </svg>
         `);
-        
+
         thumbnailBuffer = await sharp(canvas)
           .resize(size, size)
           .jpeg({ quality: 80 })
@@ -628,7 +642,7 @@ app.get('/api/thumbnail', async (req, res) => {
 
     // Cache the thumbnail with the new cache key
     thumbnailCache.set(cacheKey, thumbnailBuffer);
-    
+
     // Clean up old cache entries (keep only last 100)
     if (thumbnailCache.size > 100) {
       const keys = Array.from(thumbnailCache.keys());
@@ -636,7 +650,7 @@ app.get('/api/thumbnail', async (req, res) => {
         thumbnailCache.delete(keys[i]);
       }
     }
-    
+
     res.set('Content-Type', 'image/jpeg');
     res.send(thumbnailBuffer);
   } catch (error) {
@@ -650,13 +664,13 @@ app.get('/api/folder-preview', async (req, res) => {
   try {
     const folderPath = req.query.path;
     const size = parseInt(req.query.size) || 200;
-    
+
     if (!folderPath || !fs.existsSync(folderPath)) {
       return res.status(404).json({ error: 'Folder not found' });
     }
 
     const cacheKey = `folder-preview-${folderPath}-${size}`;
-    
+
     if (thumbnailCache.has(cacheKey)) {
       const cachedBuffer = thumbnailCache.get(cacheKey);
       res.set('Content-Type', 'image/jpeg');
@@ -665,7 +679,7 @@ app.get('/api/folder-preview', async (req, res) => {
 
     // Find the first asset in the folder (prioritizes 3D models now!)
     const firstAsset = findFirstAsset(folderPath);
-    
+
     if (!firstAsset) {
       return res.status(404).json({ error: 'No assets found in folder' });
     }
@@ -697,9 +711,9 @@ app.get('/api/folder-preview', async (req, res) => {
         video: '#ef4444',
         documents: '#f59e0b'
       };
-      
+
       const color = typeColors[firstAsset.type] || '#6b7280';
-      
+
       const canvas = Buffer.from(`
         <svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -710,16 +724,16 @@ app.get('/api/folder-preview', async (req, res) => {
           </defs>
           <rect width="100%" height="100%" fill="url(#grad)"/>
           <text x="50%" y="40%" text-anchor="middle" dy="0.3em" 
-                fill="white" font-size="${size/10}" font-family="Arial" font-weight="bold">
+                fill="white" font-size="${size / 10}" font-family="Arial" font-weight="bold">
             ${firstAsset.type.toUpperCase()}
           </text>
           <text x="50%" y="65%" text-anchor="middle" dy="0.3em" 
-                fill="white" font-size="${size/16}" font-family="Arial" opacity="0.8">
+                fill="white" font-size="${size / 16}" font-family="Arial" opacity="0.8">
             ASSET
           </text>
         </svg>
       `);
-      
+
       thumbnailBuffer = await sharp(canvas)
         .resize(size, size)
         .jpeg({ quality: 80 })
@@ -728,7 +742,7 @@ app.get('/api/folder-preview', async (req, res) => {
 
     // Cache the thumbnail
     thumbnailCache.set(cacheKey, thumbnailBuffer);
-    
+
     res.set('Content-Type', 'image/jpeg');
     res.send(thumbnailBuffer);
   } catch (error) {
@@ -741,14 +755,14 @@ app.get('/api/folder-preview', async (req, res) => {
 app.get('/api/file', (req, res) => {
   try {
     const filePath = req.query.path;
-    
+
     if (!filePath || !fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'File not found' });
     }
 
     const mimeType = mime.lookup(filePath) || 'application/octet-stream';
     res.set('Content-Type', mimeType);
-    
+
     const fileStream = fs.createReadStream(filePath);
     fileStream.pipe(res);
   } catch (error) {
@@ -761,7 +775,7 @@ app.get('/api/file', (req, res) => {
 app.get('/api/text-content', (req, res) => {
   try {
     const filePath = req.query.path;
-    
+
     if (!filePath || !fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'File not found' });
     }
@@ -773,7 +787,7 @@ app.get('/api/text-content', (req, res) => {
 
     const content = fs.readFileSync(filePath, 'utf8');
     const extension = path.extname(filePath).toLowerCase();
-    
+
     res.json({
       content,
       extension,
@@ -789,16 +803,16 @@ app.get('/api/text-content', (req, res) => {
 app.get('/api/model-texture', (req, res) => {
   try {
     const modelPath = req.query.path;
-    
+
     console.log(`\n🎨 Model texture request for: ${modelPath}`);
-    
+
     if (!modelPath || !fs.existsSync(modelPath)) {
       console.log(`❌ Model file not found: ${modelPath}`);
       return res.status(404).json({ error: 'Model file not found' });
     }
 
     const colormapPath = findColormap(modelPath);
-    
+
     if (!colormapPath) {
       console.log(`❌ No colormap texture found for: ${modelPath}`);
       return res.status(404).json({ error: 'No colormap texture found' });
@@ -808,7 +822,7 @@ app.get('/api/model-texture', (req, res) => {
 
     const mimeType = mime.lookup(colormapPath) || 'image/png';
     res.set('Content-Type', mimeType);
-    
+
     const fileStream = fs.createReadStream(colormapPath);
     fileStream.pipe(res);
   } catch (error) {
@@ -821,7 +835,7 @@ app.get('/api/model-texture', (req, res) => {
 app.post('/api/show-in-folder', (req, res) => {
   try {
     const { filePath } = req.body;
-    
+
     if (!filePath || !fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'File not found' });
     }

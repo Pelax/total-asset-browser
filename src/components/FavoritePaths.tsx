@@ -50,8 +50,7 @@ export const FavoritePaths: React.FC<FavoritePathsProps> = ({ onNavigate }) => {
     <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <Star className="w-5 h-5 text-yellow-400" />
-          <h3 className="text-lg font-semibold text-white">Quick Access</h3>
+          <h3 className="text-lg font-semibold text-white">Asset Folders</h3>
         </div>
         <button
           onClick={() => setIsAdding(true)}

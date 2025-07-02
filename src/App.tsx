@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useFileSystem } from './hooks/useFileSystem';
 import { Breadcrumb } from './components/Breadcrumb';
 import { FileGrid } from './components/FileGrid';
-import { PathInput } from './components/PathInput';
 import { FavoritePaths } from './components/FavoritePaths';
 import { Loader2, AlertCircle, Folder } from 'lucide-react';
 
@@ -77,7 +76,6 @@ function App() {
               <h1 className="text-2xl font-bold text-white">Total Asset Browser</h1>
               <p className="text-gray-400 text-sm">Browse and preview your game assets from anywhere on your system</p>
             </div>
-            <PathInput currentPath={currentPath} onNavigate={browseDirectoryAndUpdateUrl} />
           </div>
         </div>
       </header>

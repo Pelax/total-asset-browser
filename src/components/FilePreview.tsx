@@ -189,7 +189,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
           throw new Error(`Unsupported 3D model format: ${extension}`);
       }
 
-      // Load colormap texture separately and apply it properly
+      // Load texture
       const loadTexture = async () => {
         try {
           const textureResponse = await fetch(`http://localhost:3001/api/model-texture?path=${encodeURIComponent(file.path)}`);
@@ -202,12 +202,11 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
               textureLoader.load(
                 textureUrl,
                 (texture) => {
-                  // Configure texture properly
-                  texture.flipY = false;
+                  // Configure texture properly according to type
+                  texture.flipY = extension === ".fbx" || extension === ".obj";
                   texture.wrapS = THREE.RepeatWrapping;
                   texture.wrapT = THREE.RepeatWrapping;
                   texture.colorSpace = THREE.SRGBColorSpace;
-                  console.log('Successfully loaded colormap texture');
                   resolve(texture);
                 },
                 undefined,
@@ -219,13 +218,13 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             });
           }
         } catch (e) {
-          console.log('No colormap texture available');
+          console.log('No texture available');
         }
         return null;
       };
 
       // Load texture first, then model
-      const colormapTexture = await loadTexture();
+      const modelTexture = await loadTexture();
 
       loader.load(
         fileUrl,
@@ -263,31 +262,9 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
           // Apply materials and textures
           model.traverse((child: any) => {
             if (child.isMesh) {
-              child.castShadow = true;
-              child.receiveShadow = true;
-              
-              if (child.material) {
-                // Handle both single materials and material arrays
-                const materials = Array.isArray(child.material) ? child.material : [child.material];
-                
-                materials.forEach((material: any) => {
-                  if (colormapTexture) {
-                    // Apply the colormap texture
-                    material.map = colormapTexture;
-                  } else {
-                    // Ensure material has good default properties
-                    if (!material.color) {
-                      material.color = new THREE.Color(0xcccccc);
-                    }
-                  }
-                  
-                  // Improve material properties for better visibility
-                  if (material.metalness !== undefined) material.metalness = 0.1;
-                  if (material.roughness !== undefined) material.roughness = 0.8;
-                  
-                  // Ensure proper lighting response
-                  material.needsUpdate = true;
-                });
+              if (child.isMesh) {
+                child.material.map = modelTexture
+                child.material.needsUpdate = true
               }
             }
           });

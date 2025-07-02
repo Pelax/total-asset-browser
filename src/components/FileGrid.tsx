@@ -82,8 +82,16 @@ export const FileGrid: React.FC<FileGridProps> = ({
     }
   };
 
-  // Get only files (not directories) for navigation
-  const files = items.filter(item => !item.isDirectory);
+  // Get only files (not directories) for navigation, sorted by extension
+  const files = items
+    .filter(item => !item.isDirectory)
+    .sort((a, b) => {
+      const extA = a.name.split('.').pop()?.toLowerCase() || '';
+      const extB = b.name.split('.').pop()?.toLowerCase() || '';
+      if (extA < extB) return -1;
+      if (extA > extB) return 1;
+      return a.name.localeCompare(b.name);
+    });
   const currentFileIndex = selectedFile ? files.findIndex(file => file.path === selectedFile.path) : -1;
 
   const navigateToFile = (direction: 'prev' | 'next') => {
@@ -313,7 +321,16 @@ export const FileGrid: React.FC<FileGridProps> = ({
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-        {items.map((item, index) => (
+        {[
+          ...items.filter(item => item.isDirectory),
+          ...items.filter(item => !item.isDirectory).sort((a, b) => {
+            const extA = a.name.split('.').pop()?.toLowerCase() || '';
+            const extB = b.name.split('.').pop()?.toLowerCase() || '';
+            if (extA < extB) return -1;
+            if (extA > extB) return 1;
+            return a.name.localeCompare(b.name);
+          })
+        ].map((item, index) => (
           item.isDirectory ? (
             <a
               key={item.path}

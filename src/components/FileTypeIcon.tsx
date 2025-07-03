@@ -1,11 +1,11 @@
 import React from 'react';
-import { 
-  Image, 
-  Box, 
-  Music, 
-  Video, 
-  FileText, 
-  Folder, 
+import {
+  Image,
+  Box,
+  Music,
+  Video,
+  FileText,
+  Folder,
   FolderOpen,
   File,
   Type
@@ -18,15 +18,15 @@ interface FileTypeIconProps {
   className?: string;
 }
 
-export const FileTypeIcon: React.FC<FileTypeIconProps> = ({ 
-  fileType, 
-  isDirectory, 
+export const FileTypeIcon: React.FC<FileTypeIconProps> = ({
+  fileType,
+  isDirectory,
   hasAssets,
-  className = "w-6 h-6" 
+  className = "w-6 h-6"
 }) => {
   if (isDirectory) {
-    return hasAssets ? 
-      <FolderOpen className={`${className} text-emerald-400`} /> : 
+    return hasAssets ?
+      <FolderOpen className={`${className} text-emerald-400`} /> :
       <Folder className={`${className} text-gray-400`} />;
   }
 

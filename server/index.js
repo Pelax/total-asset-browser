@@ -499,7 +499,21 @@ app.get('/api/browse', async (req, res) => {
     const items = fs.readdirSync(dirPath);
     const results = [];
 
+    // Files and folders to exclude
+    const EXCLUDED_NAMES = ['.DS_Store', 'Thumbs.db', 'desktop.ini', '.itch'];
+    const EXCLUDED_EXTENSIONS = ['.tmp', '.mtl', '.bin', '.html', '.xml', '.swf', '.url'];
+
     for (const item of items) {
+      // Skip system files and unwanted file types
+      const extension = path.extname(item).toLowerCase();
+      const isExcluded = EXCLUDED_NAMES.some(name =>
+        item.toLowerCase() === name.toLowerCase()
+      ) || EXCLUDED_EXTENSIONS.some(ext =>
+        extension === ext
+      );
+
+      if (isExcluded) continue;
+
       const itemPath = path.join(dirPath, item);
       try {
         const itemStats = fs.statSync(itemPath);
@@ -515,6 +529,10 @@ app.get('/api/browse', async (req, res) => {
           // Check if folder contains assets and find the first one
           try {
             const folderContents = fs.readdirSync(itemPath);
+            if (folderContents.length === 0) {
+              // don't show empty folders
+              continue;
+            }
             hasAssets = folderContents.some(file => {
               const fileType = getFileType(path.join(itemPath, file));
               return fileType !== 'unknown';
@@ -522,7 +540,7 @@ app.get('/api/browse', async (req, res) => {
             if (hasAssets) {
               firstAsset = findFirstAsset(itemPath);
             } else {
-              // directory without any assets in it, find image in subfolders
+              // directory without any assets in it, check for images in subfolders
               const subfolders = fs.readdirSync(itemPath);
               for (const subfolder of subfolders) {
                 const subfolderPath = path.join(itemPath, subfolder);

@@ -6,6 +6,7 @@ import { FilePreview } from './FilePreview';
 import { Model3DThumbnail } from './Model3DThumbnail';
 import { useModelLoader } from '../hooks/useModelLoader';
 import { FontPreview } from './FontPreview';
+import { FolderOpen } from 'lucide-react';
 
 interface FileGridProps {
   items: FileItem[];
@@ -307,12 +308,40 @@ export const FileGrid: React.FC<FileGridProps> = ({
     );
   };
 
+  const showInFolder = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/show-in-folder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ filePath: currentPath }),
+      });
+
+      if (!response.ok) {
+        console.log('Show in folder response not ok, but folder likely opened anyway');
+      } else {
+        console.log('Folder opened in explorer successfully');
+      }
+    } catch (error) {
+      console.error('Error opening folder in explorer:', error);
+    }
+  };
+
   if (items.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 text-gray-400">
         <div className="text-center">
           <FileTypeIcon fileType="folder" isDirectory={true} className="w-16 h-16 mx-auto mb-4 opacity-50" />
           <p>No files found in this directory</p>
+          <button
+            onClick={showInFolder}
+            className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-2 mx-auto transition-colors"
+            title="Open in Explorer"
+          >
+            <FolderOpen size={16} />
+            Open in Explorer
+          </button>
         </div>
       </div>
     );
@@ -320,6 +349,16 @@ export const FileGrid: React.FC<FileGridProps> = ({
 
   return (
     <>
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={showInFolder}
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-2 transition-colors"
+          title="Open in Explorer"
+        >
+          <FolderOpen size={16} />
+          Open in Explorer
+        </button>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
         {[
           ...items.filter(item => item.isDirectory),

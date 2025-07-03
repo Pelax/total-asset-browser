@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { X, Download, ExternalLink, FolderOpen, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, RotateCw, Move3D } from 'lucide-react';
+import { X, ExternalLink, FolderOpen, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Move3D } from 'lucide-react';
 import { FileItem } from '../types';
 import { FileTypeIcon } from './FileTypeIcon';
 import { formatFileSize, formatDate } from '../utils/formatters';
@@ -19,7 +19,6 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
   file,
   onClose,
   getFileUrl,
-  getThumbnailUrl,
   onNavigate,
   canNavigate = false,
   currentIndex = 1,
@@ -81,7 +80,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
     setImageNaturalSize({ width: 0, height: 0 });
     setTextContent('');
     setModelError(null);
-    
+
     // Cleanup Three.js scene
     if (threeScene) {
       if (threeScene.cleanup) {
@@ -106,11 +105,11 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
 
     try {
       // Dynamically import Three.js modules
-      const THREE = await import('three');
-      const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
-      const { FBXLoader } = await import('three/examples/jsm/loaders/FBXLoader.js');
-      const { OBJLoader } = await import('three/examples/jsm/loaders/OBJLoader.js');
-      const { OrbitControls } = await import('three/examples/jsm/controls/OrbitControls.js');
+      const THREE = await import('three' as any);
+      const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js' as any);
+      const { FBXLoader } = await import('three/examples/jsm/loaders/FBXLoader.js' as any);
+      const { OBJLoader } = await import('three/examples/jsm/loaders/OBJLoader.js' as any);
+      const { OrbitControls } = await import('three/examples/jsm/controls/OrbitControls.js' as any);
 
       const container = modelContainerRef.current;
       const width = container.clientWidth;
@@ -123,7 +122,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
       const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
 
       // Create renderer
-      const renderer = new THREE.WebGLRenderer({ 
+      const renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
         preserveDrawingBuffer: true
@@ -197,11 +196,11 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             const textureBlob = await textureResponse.blob();
             const textureUrl = URL.createObjectURL(textureBlob);
             const textureLoader = new THREE.TextureLoader();
-            
+
             return new Promise((resolve, reject) => {
               textureLoader.load(
                 textureUrl,
-                (texture) => {
+                (texture: any) => {
                   // Configure texture properly according to type
                   texture.flipY = extension === ".fbx" || extension === ".obj";
                   texture.wrapS = THREE.RepeatWrapping;
@@ -210,7 +209,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                   resolve(texture);
                 },
                 undefined,
-                (error) => {
+                (error: any) => {
                   console.error('Error loading texture:', error);
                   reject(error);
                 }
@@ -230,7 +229,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
         fileUrl,
         (object: any) => {
           let model;
-          
+
           if (extension === '.glb' || extension === '.gltf') {
             model = object.scene;
           } else {
@@ -241,16 +240,16 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
           const box = new THREE.Box3().setFromObject(model);
           const center = box.getCenter(new THREE.Vector3());
           const size = box.getSize(new THREE.Vector3());
-          
+
           console.log(`📐 Model bounds - Center: (${center.x.toFixed(2)}, ${center.y.toFixed(2)}, ${center.z.toFixed(2)}), Size: (${size.x.toFixed(2)}, ${size.y.toFixed(2)}, ${size.z.toFixed(2)})`);
-          
+
           // Create a group to hold the model for better transformation control
           const modelGroup = new THREE.Group();
           modelGroup.add(model);
-          
+
           // Move the model so its geometric center is at the origin (0,0,0)
           model.position.set(-center.x, -center.y, -center.z);
-          
+
           // Calculate optimal scale to ensure the model is fully visible in the preview
           const maxDim = Math.max(size.x, size.y, size.z);
           // Use a more conservative scale factor for the preview to ensure full visibility
@@ -275,35 +274,35 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
           // Calculate the scaled bounding sphere radius for optimal camera distance
           const scaledMaxDim = maxDim * scale;
           const boundingSphereRadius = scaledMaxDim * Math.sqrt(3) / 2; // Diagonal of bounding box / 2
-          
+
           // Calculate camera distance based on field of view and bounding sphere
           const fov = camera.fov * (Math.PI / 180); // Convert to radians
           const cameraDistance = boundingSphereRadius / Math.sin(fov / 2);
-          
+
           // Reducing camera distance slightly to display models better
           const paddedDistance = cameraDistance * 0.8;
-          
+
           // 🎯 NEW: Better camera positioning for front-facing view
           // Position camera more towards the front-right-top for better viewing angle
           const cameraX = paddedDistance * 0.8;  // More to the front (positive X)
           const cameraY = paddedDistance * 0.4;  // Slightly elevated
           const cameraZ = paddedDistance * 0.6;  // Less depth, more front-facing
-          
+
           camera.position.set(cameraX, cameraY, cameraZ);
           camera.lookAt(0, 0, 0); // Look at the origin where the model center now is
           controls.target.set(0, 0, 0); // Set orbit controls target to origin
           controls.update();
-          
+
           console.log(`📷 Camera positioned at: (${camera.position.x.toFixed(2)}, ${camera.position.y.toFixed(2)}, ${camera.position.z.toFixed(2)}), distance: ${paddedDistance.toFixed(2)}`);
 
           setModelLoading(false);
         },
-        (progress) => {
+        (progress: { loaded: number; total: number; }) => {
           // Loading progress
           const percent = (progress.loaded / progress.total * 100);
           console.log('Loading progress:', percent + '%');
         },
-        (error) => {
+        (error: any) => {
           console.error('Error loading 3D model:', error);
           setModelError('Failed to load 3D model. The file may be corrupted or in an unsupported format.');
           setModelLoading(false);
@@ -365,7 +364,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
     if (file.fileType === 'audio' && audioRef.current) {
       // Force reload the audio element
       audioRef.current.load();
-      
+
       // Attempt to auto-play after a short delay to ensure the audio is loaded
       const playAudio = async () => {
         try {
@@ -380,7 +379,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
 
       // Small delay to ensure audio element is ready
       const timeoutId = setTimeout(playAudio, 100);
-      
+
       return () => clearTimeout(timeoutId);
     }
   }, [file.path, file.fileType]);
@@ -450,7 +449,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
 
     // Always show small images at their actual size
     const isSmallImage = imageNaturalSize.width <= containerSize.width && imageNaturalSize.height <= containerSize.height;
-    
+
     if (isSmallImage) {
       // Image fits within container, show at natural size
       return {
@@ -489,15 +488,19 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return; // Don't interfere with input fields
-      
+
       switch (e.key) {
         case 'ArrowLeft':
+        case 'a':
+        case 'A':
           if (canNavigate && onNavigate) {
             e.preventDefault();
             onNavigate('prev');
           }
           break;
         case 'ArrowRight':
+        case 'd':
+        case 'D':
           if (canNavigate && onNavigate) {
             e.preventDefault();
             onNavigate('next');
@@ -555,7 +558,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
       // Store the mouse position and image position at drag start in refs
       dragStartRef.current = { x: e.clientX, y: e.clientY };
       dragStartImagePositionRef.current = { ...imagePosition };
-      
+
       // Add global mouse event listeners for better performance
       const handleGlobalMouseMove = (e: MouseEvent) => {
         e.preventDefault();
@@ -685,22 +688,21 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                 draggable={false}
                 onLoad={handleImageLoad}
                 onDragStart={(e) => e.preventDefault()}
-                onSelectStart={(e) => e.preventDefault()}
               />
             </div>
 
             {/* Zoom Instructions */}
             {imageZoom === 1 && (
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white text-xs px-3 py-1 rounded-full">
-                {imageDisplaySize.shouldScale 
-                  ? 'Scroll to zoom • Click and drag when zoomed' 
+                {imageDisplaySize.shouldScale
+                  ? 'Scroll to zoom • Click and drag when zoomed'
                   : `Actual size: ${imageNaturalSize.width}×${imageNaturalSize.height}px • Scroll to zoom`
                 }
               </div>
             )}
           </div>
         );
-      
+
       case 'models':
         return (
           <div className="relative bg-gray-900 rounded-lg overflow-hidden" style={{ height: '60vh' }}>
@@ -753,13 +755,13 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             )}
           </div>
         );
-      
+
       case 'audio':
         return (
           <div className="bg-gray-900 rounded-lg p-8">
-            <audio 
+            <audio
               ref={audioRef}
-              controls 
+              controls
               className="w-full"
               key={file.path} // Force re-render when file changes
               preload="auto" // Preload audio for faster playback
@@ -774,13 +776,13 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             </div>
           </div>
         );
-      
+
       case 'video':
         return (
           <div className="bg-gray-900 rounded-lg overflow-hidden">
-            <video 
+            <video
               ref={videoRef}
-              controls 
+              controls
               className="w-full max-h-96"
               key={file.path} // Force re-render when file changes
             >
@@ -789,7 +791,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             </video>
           </div>
         );
-      
+
       case 'documents':
         if (file.extension === '.txt' || file.extension === '.url' || file.extension === '.json' || file.extension === '.xml' || file.extension === '.md') {
           if (textLoading) {
@@ -832,9 +834,9 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             <div className="bg-gray-900 rounded-lg p-4 max-h-96 overflow-auto">
               <div className="mb-2 flex items-center justify-between">
                 <h4 className="text-sm font-medium text-gray-300">
-                  {file.extension === '.json' ? 'JSON Content' : 
-                   file.extension === '.xml' ? 'XML Content' :
-                   file.extension === '.md' ? 'Markdown Content' : 'Text Content'}
+                  {file.extension === '.json' ? 'JSON Content' :
+                    file.extension === '.xml' ? 'XML Content' :
+                      file.extension === '.md' ? 'Markdown Content' : 'Text Content'}
                 </h4>
                 <span className="text-xs text-gray-500">
                   {textContent.split('\n').length} lines • {textContent.length} characters
@@ -852,7 +854,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             <p className="text-gray-400">Preview not available for this file type</p>
           </div>
         );
-      
+
       default:
         return (
           <div className="bg-gray-900 rounded-lg p-8 text-center">
@@ -865,7 +867,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       {/* Navigation Arrows */}
       {canNavigate && onNavigate && (
@@ -968,13 +970,13 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
 
         {/* Navigation hint */}
         {canNavigate && (
-          <div className="px-6 pb-4 flex-shrink-0">
-            <div className="text-center text-xs text-gray-500">
-              Use ← → arrow keys to navigate • {
-                file.fileType === 'images' ? 'Scroll to zoom • +/- keys to zoom • 0 to reset' : 
-                file.fileType === 'models' ? 'Left click + drag to rotate • Right click + drag to pan • Scroll to zoom' :
-                file.fileType === 'audio' ? 'Audio auto-plays when opened' :
-                'Esc to close'
+          <div className="px-8 pb-4 flex-shrink-0">
+            <div className="text-center text-sm text-gray-500">
+              Use A/D or arrow keys to navigate • {
+                file.fileType === 'images' ? 'Scroll to zoom • +/- keys to zoom • 0 to reset' :
+                  file.fileType === 'models' ? 'Left click + drag to rotate • Right click + drag to pan • Scroll to zoom' :
+                    file.fileType === 'audio' ? 'Audio auto-plays when opened' :
+                      'Esc to close'
               }
             </div>
           </div>

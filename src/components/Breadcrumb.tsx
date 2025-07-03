@@ -8,7 +8,7 @@ interface BreadcrumbProps {
 
 export const Breadcrumb: React.FC<BreadcrumbProps> = ({ currentPath, onNavigate }) => {
   const pathParts = currentPath.split(/[/\\]/).filter(Boolean);
-  
+
   const buildPath = (index: number) => {
     if (index === -1) return '';
     return pathParts.slice(0, index + 1).join('/');
@@ -23,7 +23,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({ currentPath, onNavigate 
         <Home className="w-4 h-4" />
         <span>Home</span>
       </button>
-      
+
       {pathParts.map((part, index) => (
         <React.Fragment key={index}>
           <ChevronRight className="w-4 h-4 text-gray-500" />

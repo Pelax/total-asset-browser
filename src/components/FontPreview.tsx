@@ -29,7 +29,7 @@ export const FontPreview: React.FC<FontPreviewProps> = ({
 
   useEffect(() => {
     const testFont = new FontFace(fontName, `url(${fontUrl})`);
-    
+
     testFont.load()
       .then(() => {
         document.fonts.add(testFont);
@@ -51,15 +51,19 @@ export const FontPreview: React.FC<FontPreviewProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return; // Don't interfere with input fields
-      
+
       switch (e.key) {
         case 'ArrowLeft':
+        case 'a':
+        case 'A':
           if (canNavigate && onNavigate) {
             e.preventDefault();
             onNavigate('prev');
           }
           break;
         case 'ArrowRight':
+        case 'd':
+        case 'D':
           if (canNavigate && onNavigate) {
             e.preventDefault();
             onNavigate('next');
@@ -103,9 +107,9 @@ export const FontPreview: React.FC<FontPreviewProps> = ({
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       {/* Navigation Arrows */}
       {canNavigate && onNavigate && (
@@ -126,7 +130,7 @@ export const FontPreview: React.FC<FontPreviewProps> = ({
           </button>
         </>
       )}
-      <div 
+      <div
         className="bg-gray-800 rounded-xl w-full max-w-2xl mx-auto flex flex-col" style={{ maxHeight: 'calc(100vh - 2rem)' }}
         onClick={e => e.stopPropagation()}
       >
@@ -175,7 +179,12 @@ export const FontPreview: React.FC<FontPreviewProps> = ({
               <p className="text-red-400">Failed to load font</p>
             ) : fontLoaded ? (
               <div style={{ fontFamily: `\"${fontName}\", sans-serif`, fontSize: '2rem', color: 'white', width: '100%', textAlign: 'center' }}>
-                The quick brown fox jumps over the lazy dog
+                <p>{fontName}</p>
+                <br />
+                <p>A B C D E F G H I J K L M N O P Q R S T U V W X Y Z</p>
+                <p>a b c d e f g h i j k l m n o p q r s t u v w x y z</p>
+                <p>0 1 2 3 4 5 6 7 8 9</p>
+                <p>' ! ? " ( ) [ ] + - / * = % ^ {"<"} {">"}</p>
               </div>
             ) : (
               <p className="text-orange-400">Loading font...</p>
@@ -184,9 +193,9 @@ export const FontPreview: React.FC<FontPreviewProps> = ({
         </div>
         {/* Navigation hint */}
         {canNavigate && (
-          <div className="px-6 pb-4 flex-shrink-0">
-            <div className="text-center text-xs text-gray-500">
-              Use ← → arrow keys to navigate • Esc to close
+          <div className="px-8 pb-4 flex-shrink-0">
+            <div className="text-center text-sm text-gray-500">
+              Use A/D or arrow keys to navigate • Esc to close
             </div>
           </div>
         )}

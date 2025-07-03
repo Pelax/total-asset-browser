@@ -11,12 +11,11 @@ interface Model3DThumbnailProps {
 
 export const Model3DThumbnail: React.FC<Model3DThumbnailProps> = ({
   modelPath,
-  getFileUrl,
   className = '',
   priority = 0
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [threeScene, setThreeScene] = useState<any>(null);
+  const [threeScene] = useState<any>(null);
   const { loadModel, cancelLoad, getLoadingState } = useModelLoader();
   
   // Generate unique ID for this thumbnail

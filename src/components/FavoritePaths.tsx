@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Plus, X, Folder } from 'lucide-react';
+import { Plus, X, Folder } from 'lucide-react';
 
 interface FavoritePathsProps {
   onNavigate: (path: string) => void;

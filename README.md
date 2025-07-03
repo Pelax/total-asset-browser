@@ -1,7 +1,12 @@
 # Total Asset Browser
-A desktop application for browsing and previewing game assets with advanced 3D model support.
-The goal is to use it to quickly preview images, 3D models, audio, video and documents.
-It's currently a work in progress, but it's already useful for quickly previewing many file types.
+A desktop application for browsing and previewing game assets. It's currently a work in progress, but it's already useful for quickly previewing many file types.
+
+### Features
+- Adding multiple favorite folders to browse assets
+- Previewing audio, video, 3D, images
+- Going to next/previous asset in the folder
+- Opening current folder or viewing current file in explorer
+- Filtering by file name
 
 ### Prerequisites
 - Node.js 18+ 
@@ -23,7 +28,6 @@ npm run dev
 The application will start on `http://localhost:5173` with the API server on `http://localhost:3001`.
 
 ## License
-
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Acknowledgments

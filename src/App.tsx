@@ -74,7 +74,7 @@ function App() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-white">Total Asset Browser</h1>
-              <p className="text-gray-400 text-sm">Browse and preview your game assets from anywhere on your system</p>
+              <p className="text-gray-400 text-sm">Browse and preview game assets from your system folders</p>
             </div>
           </div>
         </div>
@@ -90,8 +90,8 @@ function App() {
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <Folder className="w-16 h-16 mx-auto mb-4 text-gray-500" />
-              <h2 className="text-xl font-semibold text-white mb-2">Welcome to Total Asset Browser</h2>
-              <p className="text-gray-400 mb-4">Add favorite paths above or use the search bar to browse to a directory</p>
+              <h2 className="text-xl font-semibold text-white mb-2">Welcome to Total Asset Browser!</h2>
+              <p className="text-gray-400 mb-4">Add favorite paths above to get started</p>
             </div>
           </div>
         )}

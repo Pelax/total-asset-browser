@@ -25,6 +25,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
   getFileUrl,
   currentPath
 }) => {
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const { clearAllLoads } = useModelLoader();
 
@@ -347,29 +348,60 @@ export const FileGrid: React.FC<FileGridProps> = ({
     );
   }
 
+  // Filter items based on search query
+  const filteredItems = items.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Sort directories first, then files, and apply search filter
+  const sortedAndFilteredItems = [
+    ...filteredItems.filter(item => item.isDirectory),
+    ...filteredItems.filter(item => !item.isDirectory).sort((a, b) => {
+      const extA = a.name.split('.').pop()?.toLowerCase() || '';
+      const extB = b.name.split('.').pop()?.toLowerCase() || '';
+      if (extA < extB) return -1;
+      if (extA > extB) return 1;
+      return a.name.localeCompare(b.name);
+    })
+  ];
+
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
+        <div className="relative flex-1 max-w-md">
+          <input
+            type="text"
+            placeholder="Search files and folders..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+              aria-label="Clear search"
+            >
+              ✕
+            </button>
+          )}
+        </div>
         <button
           onClick={showInFolder}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-2 transition-colors"
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap"
           title="Open in Explorer"
         >
           <FolderOpen size={16} />
           Open in Explorer
         </button>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-        {[
-          ...items.filter(item => item.isDirectory),
-          ...items.filter(item => !item.isDirectory).sort((a, b) => {
-            const extA = a.name.split('.').pop()?.toLowerCase() || '';
-            const extB = b.name.split('.').pop()?.toLowerCase() || '';
-            if (extA < extB) return -1;
-            if (extA > extB) return 1;
-            return a.name.localeCompare(b.name);
-          })
-        ].map((item, index) => (
+      {filteredItems.length === 0 ? (
+        <div className="col-span-full text-center py-12 text-gray-400">
+          No items found matching "{searchQuery}"
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+          {sortedAndFilteredItems.map((item, index) => (
           item.isDirectory ? (
             <a
               key={item.path}
@@ -435,8 +467,9 @@ export const FileGrid: React.FC<FileGridProps> = ({
               </div>
             </a>
           )
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {selectedFile && (
         selectedFile.fileType === 'fonts' ? (

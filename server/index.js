@@ -501,7 +501,7 @@ app.get('/api/browse', async (req, res) => {
 
     // Files and folders to exclude
     const EXCLUDED_NAMES = ['.DS_Store', 'Thumbs.db', 'desktop.ini', '.itch'];
-    const EXCLUDED_EXTENSIONS = ['.tmp', '.mtl', '.bin', '.html', '.xml', '.swf', '.url'];
+    const EXCLUDED_EXTENSIONS = ['.tmp', '.mtl', '.bin', '.html', '.xml', '.swf', '.url', '.tmx', '.tsx', '.ts', '.js', '.json', '.md', '.txt'];
 
     for (const item of items) {
       // Skip system files and unwanted file types

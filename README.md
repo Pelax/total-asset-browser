@@ -11,6 +11,7 @@ A desktop application for browsing and previewing game assets. It's currently a 
 ### Prerequisites
 - Node.js 18+ 
 - npm
+- Firefox browser (Chrome WebGL context is more limited)
 
 ## Installation
 ```bash

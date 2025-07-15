@@ -264,6 +264,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
               if (child.isMesh) {
                 child.material.map = modelTexture
                 child.material.needsUpdate = true
+                child.material.side = THREE.DoubleSide;
               }
             }
           });

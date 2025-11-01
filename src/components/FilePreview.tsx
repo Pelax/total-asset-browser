@@ -265,6 +265,24 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                 child.material.map = modelTexture
                 child.material.needsUpdate = true
                 child.material.side = THREE.DoubleSide;
+                if (extension === '.fbx') {
+                  if (child.material.specular) {
+                    child.material.specular.set(0x000000);
+                  } else {
+                    child.material.specular = new THREE.Color(0x000000);
+                  }
+                  child.material.shininess = 0;
+                }
+                else {
+                  child.material.metalness = 0.0;
+                  child.material.roughness = 1.0;
+                }
+                console.log('Material:', child.material.type, {
+                  metalness: child.material.metalness,
+                  roughness: child.material.roughness,
+                  hasMetalnessMap: !!child.material.metalnessMap,
+                  hasEnvMap: !!child.material.envMap
+                });
               }
             }
           });
